@@ -21,28 +21,12 @@ This project is a simple real‑time chat room application built as a full‑sta
 - **MySQL** (or compatible) running locally
 - A terminal (PowerShell / cmd / Git Bash on Windows)
 
----
-
-## 2. Backend Setup (NestJS API)
-
-Backend folder: `activity8-chat-room-backend`
-
-### 2.1. Install dependencies
-
-From the project root (`Activity-8`):
-
-```bash
-npm install --prefix activity8-chat-room-backend
-```
-
-Or go into the folder and run:
-
 ```bash
 cd activity8-chat-room-backend
 npm install
 ```
 
-### 2.2. Configure database & environment
+### 2. Configure database & environment
 
 The backend uses TypeORM with MySQL. Make sure you have a database created, for example:
 
@@ -65,20 +49,6 @@ JWT_SECRET=your_jwt_secret
 
 > Adjust the actual variable names to match your `typeorm.config.ts` and auth configuration.
 
-### 2.3. Run the backend
-
-From the project root:
-
-```bash
-npm run start:backend
-```
-
-Or directly inside the backend folder:
-
-```bash
-cd activity8-chat-room-backend
-npm run start:dev
-```
 
 The API and Socket.IO server will run by default on **http://localhost:3000**.
 
@@ -87,16 +57,6 @@ The API and Socket.IO server will run by default on **http://localhost:3000**.
 ## 3. Frontend Setup (React App)
 
 Frontend folder: `activity8-chat-room-frontend`
-
-### 3.1. Install dependencies
-
-From the project root:
-
-```bash
-npm install --prefix activity8-chat-room-frontend
-```
-
-Or inside the folder:
 
 ```bash
 cd activity8-chat-room-frontend
