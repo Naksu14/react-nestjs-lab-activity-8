@@ -197,38 +197,5 @@ npm run dev
 
 ---
 
-## 6. Typical Development Workflow
-
-1. **Start database** (MySQL) and ensure credentials match your backend config.
-2. **Start backend**:
-   - `npm run start:backend` (from root) or `cd activity8-chat-room-backend && npm run start:dev`.
-3. **Start frontend**:
-   - `npm run start:frontend` (from root) or `cd activity8-chat-room-frontend && npm start`.
-4. Open the browser to the frontend URL and:
-   - Register or login.
-   - Create a room, invite users, and start chatting in real‑time.
-
----
-
-## 7. Running Tests (optional)
-
-### Backend tests
-
-From `activity8-chat-room-backend`:
-
-```bash
-npm test        # unit tests
-npm run test:e2e
-npm run test:cov
-```
-
-The frontend currently uses the default Create React App testing setup; you can run:
-
-```bash
-cd activity8-chat-room-frontend
-npm test
-```
-
----
 
 This README describes the overall structure of the lab, how to install dependencies for both frontend and backend, how to run them together, and what the application does end‑to‑end.
