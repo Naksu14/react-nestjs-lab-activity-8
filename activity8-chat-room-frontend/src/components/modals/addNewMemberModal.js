@@ -51,8 +51,6 @@ const AddNewMemberModal = ({
     }
   };
 
-  console.log("Current Room in Modal:", currentRoom);
-
   if (!isOpen) return null;
 
   return (

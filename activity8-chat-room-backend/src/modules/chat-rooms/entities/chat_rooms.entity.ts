@@ -13,7 +13,7 @@ import { User } from '../../users/entities/users.entity';
 
 export enum ChatRoomType {
   PRIVATE = 'private',
-  GROUP = 'group',
+  PUBLIC = 'public',
 }
 
 @Entity('chat_rooms')

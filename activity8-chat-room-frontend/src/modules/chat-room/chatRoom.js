@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Send,
   LogOut,
@@ -29,6 +29,8 @@ const ChatRoom = () => {
     setSearchRoom,
     isModalOpen,
     setIsModalOpen,
+    activeSidebarTab,
+    setActiveSidebarTab,
     isCreateRoomOpen,
     setIsCreateRoomOpen,
     isJoinModalOpen,
@@ -46,6 +48,7 @@ const ChatRoom = () => {
     setSelectedJoinRoomId,
     messageText,
     setMessageText,
+    isUserActive,
     currentUser,
     myChatRooms,
     allChatRooms,
@@ -91,7 +94,13 @@ const ChatRoom = () => {
                 currentUser?.email ||
                 "User Name"}
             </p>
-            <span className="text-xs text-green-400">Online</span>
+            <span
+              className={`text-xs font-bold ${
+                isUserActive ? "text-green-400" : "text-gray-400"
+              }`}
+            >
+              {isUserActive ? "Online" : "Inactive"}
+            </span>
           </div>
         </div>
 
@@ -171,142 +180,178 @@ const ChatRoom = () => {
                 }}
               />
             </div>
+
+            {/* Tabs: Joined vs Explore */}
+            <div className="flex gap-2 mt-2 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setActiveSidebarTab("joined")}
+                className={`flex-1 py-1 rounded-md border text-center transition-colors ${
+                  activeSidebarTab === "joined"
+                    ? "bg-violet-500 text-white border-violet-500"
+                    : "border-[var(--border-color)] text-[var(--text-muted)] hover:bg-gray-500/5"
+                }`}
+              >
+                Joined
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSidebarTab("explore")}
+                className={`flex-1 py-1 rounded-md border text-center transition-colors ${
+                  activeSidebarTab === "explore"
+                    ? "bg-violet-500 text-white border-violet-500"
+                    : "border-[var(--border-color)] text-[var(--text-muted)] hover:bg-gray-500/5"
+                }`}
+              >
+                Explore
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* SECTION 1: YOUR ROOMS (JOINED) */}
-            <div className="py-2">
-              <p
-                className="px-4 py-2 text-left text-xs font-bold uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
+            {activeSidebarTab === "joined" ? (
+              <div className="py-2">
+                <p
+                  className="px-4 py-2 text-left text-xs font-bold uppercase tracking-widest"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Joined Rooms
+                </p>
+                {(myChatRooms || [])
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      getRoomLastActivityDate(b) - getRoomLastActivityDate(a)
+                  )
+                  .filter((room) =>
+                    room.chat_room_name
+                      .toLowerCase()
+                      .includes(searchRoom.toLowerCase())
+                  )
+                  .map((room) => {
+                    const lastMsg =
+                      room.messages && room.messages.length > 0
+                        ? room.messages
+                            .slice()
+                            .sort(
+                              (a, b) =>
+                                new Date(b.created_at) - new Date(a.created_at)
+                            )[0]
+                        : null;
+                    const date = new Date(
+                      lastMsg?.created_at || room.updated_at
+                    );
+
+                    const time = date.toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    });
+
+                    const preview = lastMsg
+                      ? lastMsg.text_message
+                      : "Start the conversation in this room.";
+                    const isSelected = room.id === selectedRoomId;
+                    return (
+                      <div
+                        key={`joined-${room.id}`}
+                        onClick={() => setSelectedRoomId(room.id)}
+                        className={`px-4 py-3 flex gap-3 cursor-pointer border-l-4 transition-colors ${
+                          isSelected
+                            ? "bg-violet-500/10 border-violet-500"
+                            : "border-transparent hover:bg-gray-500/5"
+                        }`}
+                      >
+                        <div className="w-10 h-10 bg-violet-500/20 rounded-lg shrink-0 flex items-center justify-center text-violet-500">
+                          <Hash size={20} />
+                        </div>
+                        <div className="flex-1 overflow-hidden text-left">
+                          <div className="flex justify-between items-baseline">
+                            <h4
+                              className="text-sm font-semibold truncate"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              {room.chat_room_name || `Room ${room.id}`}
+                            </h4>
+                            <span
+                              className="text-xs"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              {time}
+                            </span>
+                          </div>
+                          <p
+                            className="text-xs truncate"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            {preview}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div
+                className="py-2"
+                style={{ borderColor: "var(--border-color)" }}
               >
-                Joined Rooms
-              </p>
-              {(myChatRooms || [])
-                .slice()
-                .sort(
-                  (a, b) =>
-                    getRoomLastActivityDate(b) - getRoomLastActivityDate(a)
-                )
-                .filter(room => room.chat_room_name.toLowerCase().includes(searchRoom.toLowerCase()))
-                .map((room) => {
-                  // messages array may not be ordered. Ensure we pick the latest by created_at.
-                  const lastMsg =
-                    room.messages && room.messages.length > 0
-                      ? room.messages
-                          .slice()
-                          .sort(
-                            (a, b) =>
-                              new Date(b.created_at) - new Date(a.created_at)
-                          )[0]
-                      : null;
-                  const date = new Date(lastMsg?.created_at || room.updated_at);
-
-                  const time = date.toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  });
-
-                  const preview = lastMsg
-                    ? lastMsg.text_message
-                    : "Start the conversation in this room.";
-                  const isSelected = room.id === selectedRoomId;
-                  return (
+                <p
+                  className="px-4 py-2 text-left text-xs font-bold uppercase tracking-widest"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Explore Rooms
+                </p>
+                {(allChatRooms || [])
+                  .filter(
+                    (r) =>
+                      r.type === "public" &&
+                      !(myChatRooms || []).some((mr) => mr.id === r.id) &&
+                      r.members?.length > 0
+                  )
+                  .filter((room) =>
+                    room.chat_room_name
+                      .toLowerCase()
+                      .includes(searchRoom.toLowerCase())
+                  )
+                  .map((room) => (
                     <div
-                      key={`joined-${room.id}`}
-                      onClick={() => setSelectedRoomId(room.id)}
-                      className={`px-4 py-3 flex gap-3 cursor-pointer border-l-4 transition-colors ${
-                        isSelected
-                          ? "bg-violet-500/10 border-violet-500"
-                          : "border-transparent hover:bg-gray-500/5"
-                      }`}
+                      key={`discover-${room.id}`}
+                      className="px-4 py-3 flex items-center gap-3 cursor-default group transition-colors hover:bg-gray-500/5"
                     >
-                      <div className="w-10 h-10 bg-violet-500/20 rounded-lg shrink-0 flex items-center justify-center text-violet-500">
+                      <div className="w-10 h-10 bg-gray-500/10 rounded-lg shrink-0 flex items-center justify-center text-gray-400 group-hover:text-violet-400 transition-colors">
                         <Hash size={20} />
                       </div>
                       <div className="flex-1 overflow-hidden text-left">
-                        <div className="flex justify-between items-baseline">
-                          <h4
-                            className="text-sm font-semibold truncate"
-                            style={{ color: "var(--text-primary)" }}
-                          >
-                            {room.chat_room_name || `Room ${room.id}`}
-                          </h4>
-                          <span
-                            className="text-xs"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            {time}
-                          </span>
-                        </div>
+                        <h4
+                          className="text-sm font-semibold truncate"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {room.chat_room_name}
+                        </h4>
                         <p
-                          className="text-xs truncate"
+                          className="text-xs"
                           style={{ color: "var(--text-muted)" }}
                         >
-                          {preview}
+                          {room.members?.length ?? 0} members
                         </p>
                       </div>
-                    </div>
-                  );
-                })}
-            </div>
 
-            {/* SECTION 2: DISCOVER (OTHER ROOMS TO JOIN) */}
-            <div
-              className="py-2 border-t"
-              style={{ borderColor: "var(--border-color)" }}
-            >
-              <p
-                className="px-4 py-2 text-left text-xs font-bold uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Explore Rooms
-              </p>
-              {(allChatRooms || [])
-                .filter(
-                  (r) =>
-                    r.type === "group" &&
-                    !(myChatRooms || []).some((mr) => mr.id === r.id) &&
-                    r.members?.length > 0
-                )
-                .map((room) => (
-                  <div
-                    key={`discover-${room.id}`}
-                    className="px-4 py-3 flex items-center gap-3 cursor-default group transition-colors hover:bg-gray-500/5"
-                  >
-                    <div className="w-10 h-10 bg-gray-500/10 rounded-lg shrink-0 flex items-center justify-center text-gray-400 group-hover:text-violet-400 transition-colors">
-                      <Hash size={20} />
-                    </div>
-                    <div className="flex-1 overflow-hidden text-left">
-                      <h4
-                        className="text-sm font-semibold truncate"
-                        style={{ color: "var(--text-primary)" }}
+                      {/* JOIN BUTTON */}
+                      <button
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-violet-500 hover:text-white transition-all text-violet-500"
+                        title="Join Room"
+                        onClick={() => {
+                          setSelectedJoinRoomId(room.id);
+                          setIsJoinModalOpen(true);
+                        }}
                       >
-                        {room.chat_room_name}
-                      </h4>
-                      <p
-                        className="text-xs"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        {room.members?.length ?? 0} members
-                      </p>
+                        <ArrowRightCircle size={24} />
+                      </button>
                     </div>
-
-                    {/* JOIN BUTTON */}
-                    <button
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-violet-500 hover:text-white transition-all text-violet-500"
-                      title="Join Room"
-                      onClick={() => {
-                        setSelectedJoinRoomId(room.id);
-                        setIsJoinModalOpen(true);
-                      }}
-                    >
-                      <ArrowRightCircle size={24} />
-                    </button>
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            )}
           </div>
         </aside>
 
@@ -319,7 +364,9 @@ const ChatRoom = () => {
           }}
         >
           <div
-            className={`px-6 py-3 border-b flex justify-between items-center transition-colors ${!selectedRoomId ? "hidden" : ""}`}
+            className={`px-6 py-3 border-b flex justify-between items-center transition-colors ${
+              !selectedRoomId ? "hidden" : ""
+            }`}
             style={{
               backgroundColor: "var(--bg-secondary)",
               borderColor: "var(--border-color)",
@@ -491,8 +538,8 @@ const ChatRoom = () => {
                   className="text-xs uppercase tracking-widest font-bold"
                   style={{ color: "var(--text-muted)", opacity: 0.8 }}
                 >
-                  {selectedRoom?.type === "group"
-                    ? "Group Room"
+                  {selectedRoom?.type === "public"
+                    ? "Public Room"
                     : "Private Room"}
                 </p>
               </div>
@@ -547,7 +594,11 @@ const ChatRoom = () => {
                         >
                           {member?.user?.firstname} {member?.user?.lastname}
                         </div>
-                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            member?.user?.isActive ? "bg-green-500" : "bg-gray-300"
+                          } shadow-[0_0_5px_rgba(34,197,94,0.5)]`}
+                        ></div>
                       </div>
                     ))}
               </div>

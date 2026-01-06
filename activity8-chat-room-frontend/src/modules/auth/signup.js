@@ -62,8 +62,20 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 justify-center items-center h-screen">
-      <div className="w-[32rem] bg-[#FAFBFC] border border-[#D1D9E0] p-8 rounded-lg shadow-sm">
+    <div
+      className="flex flex-col gap-4 justify-center items-center h-screen"
+      style={{
+        backgroundColor: "var(--bg-main)",
+        color: "var(--text-primary)",
+      }}
+    >
+      <div
+        className="w-[32rem] border p-8 rounded-lg shadow-sm"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          borderColor: "var(--border-color)",
+        }}
+      >
         <img src={ChatRoom} alt="Logo" className="mx-auto mb-4 w-20 h-20" />
         <h2 className="text-base font-semibold text-center">
           Create Your Account
@@ -85,6 +97,11 @@ const Signup = () => {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Enter your first name"
+                style={{
+                  backgroundColor: "var(--bg-main)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--text-primary)",
+                }}
               />
             </div>
             <div>
@@ -92,11 +109,16 @@ const Signup = () => {
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Enter your last name"
+                style={{
+                  backgroundColor: "var(--bg-main)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--text-primary)",
+                }}
               />
             </div>
           </div>
@@ -105,11 +127,16 @@ const Signup = () => {
               Email <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
+              style={{
+                backgroundColor: "var(--bg-main)",
+                borderColor: "var(--border-color)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
           <div className="mb-6">
@@ -117,11 +144,16 @@ const Signup = () => {
               Password <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
+              style={{
+                backgroundColor: "var(--bg-main)",
+                borderColor: "var(--border-color)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
 
@@ -145,7 +177,13 @@ const Signup = () => {
         </form>
       </div>
 
-      <div className="w-[32rem] bg-[#FAFBFC] border border-[#D1D9E0] p-4 rounded-lg shadow-sm">
+      <div
+        className="w-[32rem] border rounded-lg shadow-sm p-4"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          borderColor: "var(--border-color)",
+        }}
+      >
         <p className="text-center text-sm">
           Already have an account?{" "}
           <a

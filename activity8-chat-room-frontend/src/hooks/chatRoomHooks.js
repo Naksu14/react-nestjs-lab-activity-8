@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { joinRoom, leaveRoom } from "../socket/chatSocket";
 import { socket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser } from "../services/authService";
+import { getCurrentUser, updateCurrentUser } from "../services/authService";
 import {
   getMyChatRooms,
   getAllChatRooms,
@@ -17,6 +17,7 @@ export const useChatRoom = () => {
   const [searchRoom, setSearchRoom] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
+  const [activeSidebarTab, setActiveSidebarTab] = useState("joined");
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -24,6 +25,7 @@ export const useChatRoom = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [selectedJoinRoomId, setSelectedJoinRoomId] = useState(null);
   const [messageText, setMessageText] = useState("");
+  const [isUserActive, setIsUserActive] = useState(true);
   const queryClient = useQueryClient();
   const messagesContainerRef = useRef(null);
   const messageEndRef = useRef(null);
@@ -45,13 +47,21 @@ export const useChatRoom = () => {
     currentRoomIdRef.current = selectedRoomId;
   }, [selectedRoomId]);
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark") return true;
+    if (stored === "light") return false;
+    return false;
+  });
 
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("theme", "dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("theme", "light");
     }
   }, [isDarkMode]);
 
@@ -93,6 +103,59 @@ export const useChatRoom = () => {
   }
   if (allRoomsError) {
   }
+
+  useEffect(() => {
+    const INACTIVE_DELAY = 5000;
+    const timer = { current: null };
+
+    const setActive = (active) => {
+      clearTimeout(timer.current);
+
+      if (active) {
+        setIsUserActive(true);
+      } else {
+        timer.current = setTimeout(
+          () => setIsUserActive(false),
+          INACTIVE_DELAY
+        );
+      }
+    };
+
+    const handleVisibility = () =>
+      setActive(document.visibilityState === "visible");
+
+    window.addEventListener("focus", () => setActive(true));
+    window.addEventListener("blur", () => setActive(false));
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    // initial check
+    handleVisibility();
+
+    return () => {
+      clearTimeout(timer.current);
+      window.removeEventListener("focus", () => setActive(true));
+      window.removeEventListener("blur", () => setActive(false));
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  // user active/inactive status in the database
+  useEffect(() => {
+    // Only attempt to update when we know who the user is
+    if (!currentUser) return;
+
+    const syncActivityStatus = async () => {
+      try {
+        await updateCurrentUser({ isActive: isUserActive });
+        // Refresh current user data in cache
+        queryClient.invalidateQueries(["currentUser"]);
+      } catch (error) {
+        console.error("Failed to update user activity status:", error);
+      }
+    };
+
+    syncActivityStatus();
+  }, [isUserActive, currentUser, queryClient]);
 
   const handleSendMessage = async () => {
     if (!selectedRoomId || !messageText.trim()) return;
@@ -175,6 +238,8 @@ export const useChatRoom = () => {
     setSearchRoom,
     isModalOpen,
     setIsModalOpen,
+    activeSidebarTab,
+    setActiveSidebarTab,
     isCreateRoomOpen,
     setIsCreateRoomOpen,
     isJoinModalOpen,
@@ -192,6 +257,7 @@ export const useChatRoom = () => {
     setSelectedJoinRoomId,
     messageText,
     setMessageText,
+    isUserActive,
     currentUser,
     myChatRooms,
     allChatRooms,

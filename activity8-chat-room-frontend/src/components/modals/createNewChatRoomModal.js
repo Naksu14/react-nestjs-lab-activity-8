@@ -119,18 +119,18 @@ const CreateRoomModal = ({ isOpen, onClose }) => {
           {/* Room Type Toggle */}
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => setRoomType("group")}
+              onClick={() => setRoomType("public")}
               className={`flex items-center justify-center gap-2 py-2 rounded-lg border-2 transition-all ${
-                roomType === "group"
+                roomType === "public"
                   ? "border-violet-500 bg-violet-500/10 text-violet-500"
                   : "opacity-60"
               }`}
               style={{
-                backgroundColor: roomType === "group" ? "" : "var(--bg-main)",
+                backgroundColor: roomType === "public" ? "" : "var(--bg-main)",
               }}
             >
               <Users size={16} />
-              <span className="text-xs font-bold">Group</span>
+              <span className="text-xs font-bold">Public</span>
             </button>
             <button
               onClick={() => setRoomType("private")}
