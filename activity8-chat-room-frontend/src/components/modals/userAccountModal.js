@@ -127,6 +127,7 @@ const UserAccountModal = ({ isOpen, onClose }) => {
                   <input
                     type="text"
                     defaultValue={currentUser.firstname}
+                    maxLength={50}
                     onChange={(e) =>
                       setFormData({ ...formData, firstname: e.target.value })
                     }
@@ -155,6 +156,7 @@ const UserAccountModal = ({ isOpen, onClose }) => {
                   <input
                     type="text"
                     defaultValue={currentUser.lastname}
+                    maxLength={50}
                     onChange={(e) =>
                       setFormData({ ...formData, lastname: e.target.value })
                     }
@@ -185,6 +187,7 @@ const UserAccountModal = ({ isOpen, onClose }) => {
                   type="email"
                   disabled
                   defaultValue={currentUser.email}
+                  maxLength={50}
                   className="w-full border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 bg-gray-500/10 cursor-not-allowed"
                   style={{
                     backgroundColor: "var(--bg-main)",
@@ -216,6 +219,7 @@ const UserAccountModal = ({ isOpen, onClose }) => {
                   type="password"
                   autoComplete="new-password"
                   placeholder="New Password"
+                  maxLength={50}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }

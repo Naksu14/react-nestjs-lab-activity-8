@@ -88,6 +88,7 @@ const AddNewMemberModal = ({
             <input
               type="text"
               value={searchMember}
+              maxLength={50}
               onChange={(e) => setSearchMember(e.target.value)}
               placeholder="Search specific user..."
               className="w-full border rounded-lg py-3 pl-9 pr-4 text-md focus:outline-none focus:ring-2 focus:ring-violet-500/20"

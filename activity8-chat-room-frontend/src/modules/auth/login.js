@@ -56,6 +56,7 @@ const Login = () => {
               type="email"
               id="email"
               value={email}
+              maxLength={50}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               style={{
@@ -72,6 +73,7 @@ const Login = () => {
               type="password"
               id="password"
               value={password}
+              maxLength={50}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               style={{
@@ -83,7 +85,7 @@ const Login = () => {
           </div>
 
           {errorMessage ? (
-            <div className="flex justify-center bg-red-100 border border-red-400 text-red-600 p-1 rounded-md mb-2 -mt-2">
+            <div className="flex justify-center bg-red-100/20 border border-red-400 text-red-600 p-1 rounded-md mb-2 -mt-2">
               {errorMessage}
             </div>
           ) : null}

@@ -104,6 +104,7 @@ const CreateRoomModal = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={roomName}
+                maxLength={50}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Enter name..."
                 className="w-full border rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
@@ -168,6 +169,7 @@ const CreateRoomModal = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={searchMember}
+                maxLength={50}
                 onChange={(e) => setSearchMember(e.target.value)}
                 placeholder="Search specific user..."
                 className="w-full border rounded-lg py-2 pl-9 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20"

@@ -184,4 +184,17 @@ export class ChatRoomsService {
       order: { created_at: 'ASC' },
     });
   }
+
+  //update chat room details
+  async updateChatRoom(
+    chatRoomId: number,
+    updateData: Partial<CreateChatRoomDto>,
+  ): Promise<ChatRoom> {
+    const chatRoom = await this.chatRoomRepo.findOneBy({ id: chatRoomId });
+    if (!chatRoom) throw new NotFoundException('Chat room not found');
+    Object.assign(chatRoom, updateData);
+    await this.chatRoomRepo.save(chatRoom);
+    return this.findById(chatRoomId);
+  }
+
 }

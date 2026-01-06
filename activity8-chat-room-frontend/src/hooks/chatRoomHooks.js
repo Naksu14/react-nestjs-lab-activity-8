@@ -7,6 +7,7 @@ import {
   getMyChatRooms,
   getAllChatRooms,
   sendMessage,
+  updateChatRoom,
 } from "../services/chatRoomService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -173,6 +174,17 @@ export const useChatRoom = () => {
     }
   };
 
+  const handleUpdateRoomDetails = async (updateData) => {
+    if (!selectedRoomId) return;
+    try {
+      await updateChatRoom(selectedRoomId, updateData);
+      queryClient.invalidateQueries(["myChatRooms"]);
+      queryClient.invalidateQueries(["allChatRooms"]);
+    } catch (error) {
+      console.error("Failed to update chat room:", error);
+    }
+  };
+
   useEffect(() => {
     const handleNewMessage = () => {
       queryClient.invalidateQueries(["myChatRooms"]);
@@ -268,6 +280,7 @@ export const useChatRoom = () => {
     messageEndRef,
     selectedRoom,
     getRoomLastActivityDate,
+    handleUpdateRoomDetails,
     handleLogout,
   };
 };

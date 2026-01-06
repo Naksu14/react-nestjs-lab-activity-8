@@ -95,6 +95,7 @@ const Signup = () => {
                 className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
                 value={firstName}
+                maxLength={50}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Enter your first name"
                 style={{
@@ -112,6 +113,7 @@ const Signup = () => {
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
                 value={lastName}
+                maxLength={50}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Enter your last name"
                 style={{
@@ -130,6 +132,7 @@ const Signup = () => {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="email"
               value={email}
+              maxLength={50}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               style={{
@@ -147,6 +150,7 @@ const Signup = () => {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               value={password}
+              maxLength={50}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               style={{

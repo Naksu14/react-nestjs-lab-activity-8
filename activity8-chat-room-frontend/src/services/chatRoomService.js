@@ -84,3 +84,17 @@ export const sendMessage = async (payload) => {
   });
   return data;
 };
+
+
+// update chat room details
+export const updateChatRoom = async (chatRoomId, updateData) => {
+  const token = localStorage.getItem("authToken");
+  const { data } = await axios.patch(
+    `${API_URL}/chat-rooms/${chatRoomId}`,
+    updateData,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return data;
+};

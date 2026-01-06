@@ -30,6 +30,7 @@ const ForgotPassword = () => {
               className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               id="newpassword"
+              maxLength={50}
               placeholder="Enter your password"
             />
           </div>
@@ -40,6 +41,7 @@ const ForgotPassword = () => {
               className="w-full px-3 py-2 border border-[#D1D9E0] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               id="confirmPassword"
+              maxLength={50}
               placeholder="Confirm your password"
             />
           </div>

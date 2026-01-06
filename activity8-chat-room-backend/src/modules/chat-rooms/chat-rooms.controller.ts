@@ -3,6 +3,7 @@ import {
   Body,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   ParseIntPipe,
@@ -77,5 +78,18 @@ export class ChatRoomsController {
     const user = req.user;
     const userId = user?.id;
     return this.chatRoomsService.sendMessage(dto, userId);
+  }
+
+  //update chat room details
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async updateRoom(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: CreateChatRoomDto,
+    @Req() req: any,
+  ) {
+    const user = req.user;
+    const userId = user?.id;
+    return this.chatRoomsService.updateChatRoom(id, updateDto);
   }
 }

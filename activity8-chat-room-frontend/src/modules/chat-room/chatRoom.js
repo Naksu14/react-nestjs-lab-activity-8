@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Send,
   LogOut,
@@ -59,8 +59,28 @@ const ChatRoom = () => {
     messageEndRef,
     selectedRoom,
     getRoomLastActivityDate,
+    handleUpdateRoomDetails,
     handleLogout,
   } = useChatRoom();
+
+  const [isEditingRoom, setIsEditingRoom] = useState(false);
+  const [editRoomName, setEditRoomName] = useState("");
+  const [editRoomType, setEditRoomType] = useState("public");
+
+  useEffect(() => {
+    if (selectedRoom && !isEditingRoom) {
+      setEditRoomName(selectedRoom.chat_room_name || "");
+      setEditRoomType(selectedRoom.type || "public");
+    }
+  }, [selectedRoom, isEditingRoom]);
+
+  const handleSaveRoomDetails = async () => {
+    await handleUpdateRoomDetails({
+      chat_room_name: editRoomName,
+      type: editRoomType,
+    });
+    setIsEditingRoom(false);
+  };
 
   return (
     <div
@@ -170,6 +190,7 @@ const ChatRoom = () => {
               <input
                 type="text"
                 value={searchRoom}
+                maxLength={50}
                 onChange={(e) => setSearchRoom(e.target.value)}
                 placeholder="Search rooms or users..."
                 className="w-full border rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
@@ -506,7 +527,7 @@ const ChatRoom = () => {
               borderColor: "var(--border-color)",
             }}
           >
-            {/* Project Info Header */}
+            {/* Project Info Header (view / edit) */}
             <div className="text-center space-y-4">
               <div
                 className="w-24 h-24 bg-gradient-to-tr from-violet-500 to-indigo-600 rounded-full mx-auto border-4 shadow-sm flex items-center justify-center text-white text-3xl font-black"
@@ -514,35 +535,94 @@ const ChatRoom = () => {
               >
                 {(selectedRoom?.chat_room_name || "R").charAt(0).toUpperCase()}
               </div>
-              <div className="flex flex-col gap-1">
-                <h3
-                  className="font-bold text-lg"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {selectedRoom?.chat_room_name || "Room Name"}
-                </h3>
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Created by{" "}
-                  <span
-                    className="font-semibold"
-                    style={{ color: "var(--accent-color)" }}
+              {!isEditingRoom ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <h3
+                      className="font-bold text-lg"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {selectedRoom?.chat_room_name || "Room Name"}
+                    </h3>
+                    {currentUser?.id === selectedRoom?.created_by?.id && (
+                      <button
+                        type="button"
+                        className="text-xs font-bold px-2 py-1 rounded bg-violet-500/10 hover:bg-violet-500/20 transition-colors uppercase tracking-tight"
+                        onClick={() => setIsEditingRoom(true)}
+                        style={{ color: "var(--accent-color)" }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--text-muted)" }}
                   >
-                    {selectedRoom?.created_by?.firstname || "Admin"}{" "}
-                    {selectedRoom?.created_by?.lastname || ""}
-                  </span>
-                </p>
-                <p
-                  className="text-xs uppercase tracking-widest font-bold"
-                  style={{ color: "var(--text-muted)", opacity: 0.8 }}
-                >
-                  {selectedRoom?.type === "public"
-                    ? "Public Room"
-                    : "Private Room"}
-                </p>
-              </div>
+                    Created by{" "}
+                    <span
+                      className="font-semibold"
+                      style={{ color: "var(--accent-color)" }}
+                    >
+                      {selectedRoom?.created_by?.firstname || "Admin"}{" "}
+                      {selectedRoom?.created_by?.lastname || ""}
+                    </span>
+                  </p>
+                  <p
+                    className="text-xs uppercase tracking-widest font-bold"
+                    style={{ color: "var(--text-muted)", opacity: 0.8 }}
+                  >
+                    {selectedRoom?.type === "public"
+                      ? "Public Room"
+                      : "Private Room"}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 items-stretch">
+                  <input
+                    type="text"
+                    value={editRoomName}
+                    onChange={(e) => setEditRoomName(e.target.value)}
+                    maxLength={50}
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    placeholder="Room name"
+                    style={{
+                      backgroundColor: "var(--bg-main)",
+                      borderColor: "var(--border-color)",
+                      color: "var(--text-primary)",
+                    }}
+                  />
+                  <select
+                    value={editRoomType}
+                    onChange={(e) => setEditRoomType(e.target.value)}
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    style={{
+                      backgroundColor: "var(--bg-main)",
+                      borderColor: "var(--border-color)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    <option value="public">Public Room</option>
+                    <option value="private">Private Room</option>
+                  </select>
+                  <div className="flex justify-center gap-2 text-sm">
+                    <button
+                      type="button"
+                      className="px-3 py-1 rounded bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+                      onClick={handleSaveRoomDetails}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="px-3 py-1 rounded border border-gray-400 text-gray-400 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsEditingRoom(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <hr
@@ -560,14 +640,16 @@ const ChatRoom = () => {
                   Members
                 </h4>
                 {/* ADD USER BUTTON */}
-                <button
-                  className="text-xs font-bold px-2 py-1 rounded bg-violet-500/10 hover:bg-violet-500/20 transition-colors uppercase tracking-tight"
-                  title="Add New Member"
-                  style={{ color: "var(--accent-color)" }}
-                  onClick={() => setIsAddMemberOpen(true)}
-                >
-                  + Add
-                </button>
+                {currentUser?.id === selectedRoom?.created_by?.id && (
+                  <button
+                    className="text-xs font-bold px-2 py-1 rounded bg-violet-500/10 hover:bg-violet-500/20 transition-colors uppercase tracking-tight"
+                    title="Add New Member"
+                    style={{ color: "var(--accent-color)" }}
+                    onClick={() => setIsAddMemberOpen(true)}
+                  >
+                    + Add
+                  </button>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -596,7 +678,9 @@ const ChatRoom = () => {
                         </div>
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            member?.user?.isActive ? "bg-green-500" : "bg-gray-300"
+                            member?.user?.isActive
+                              ? "bg-green-500"
+                              : "bg-gray-300"
                           } shadow-[0_0_5px_rgba(34,197,94,0.5)]`}
                         ></div>
                       </div>
