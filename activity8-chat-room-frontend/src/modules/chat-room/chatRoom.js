@@ -4,7 +4,6 @@ import {
   LogOut,
   Search,
   MoreVertical,
-  Paperclip,
   Moon,
   Sun,
   Plus,
@@ -59,28 +58,16 @@ const ChatRoom = () => {
     messageEndRef,
     selectedRoom,
     getRoomLastActivityDate,
-    handleUpdateRoomDetails,
+    isEditingRoom,
+    setIsEditingRoom,
+    editRoomName,
+    setEditRoomName,
+    editRoomType,
+    setEditRoomType,
+    handleSaveRoomDetails,
+    handleUpdateLastReadMessage,
     handleLogout,
   } = useChatRoom();
-
-  const [isEditingRoom, setIsEditingRoom] = useState(false);
-  const [editRoomName, setEditRoomName] = useState("");
-  const [editRoomType, setEditRoomType] = useState("public");
-
-  useEffect(() => {
-    if (selectedRoom && !isEditingRoom) {
-      setEditRoomName(selectedRoom.chat_room_name || "");
-      setEditRoomType(selectedRoom.type || "public");
-    }
-  }, [selectedRoom, isEditingRoom]);
-
-  const handleSaveRoomDetails = async () => {
-    await handleUpdateRoomDetails({
-      chat_room_name: editRoomName,
-      type: editRoomType,
-    });
-    setIsEditingRoom(false);
-  };
 
   return (
     <div
@@ -276,7 +263,10 @@ const ChatRoom = () => {
                     return (
                       <div
                         key={`joined-${room.id}`}
-                        onClick={() => setSelectedRoomId(room.id)}
+                        onClick={() => {
+                          handleUpdateLastReadMessage(room.id);
+                          setSelectedRoomId(room.id);
+                        }}
                         className={`px-4 py-3 flex gap-3 cursor-pointer border-l-4 transition-colors ${
                           isSelected
                             ? "bg-violet-500/10 border-violet-500"
@@ -287,26 +277,68 @@ const ChatRoom = () => {
                           <Hash size={20} />
                         </div>
                         <div className="flex-1 overflow-hidden text-left">
-                          <div className="flex justify-between items-baseline">
-                            <h4
-                              className="text-sm font-semibold truncate"
-                              style={{ color: "var(--text-primary)" }}
-                            >
-                              {room.chat_room_name || `Room ${room.id}`}
-                            </h4>
-                            <span
-                              className="text-xs"
-                              style={{ color: "var(--text-muted)" }}
-                            >
-                              {time}
-                            </span>
-                          </div>
-                          <p
-                            className="text-xs truncate"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            {preview}
-                          </p>
+                          {(() => {
+                            const myMembership = room.members?.find(
+                              (m) => m.user?.id === currentUser?.id
+                            );
+                            const lastMsgSenderId =
+                              lastMsg?.sender?.id ?? lastMsg?.senderId;
+                            const isOwnMessage =
+                              lastMsgSenderId === currentUser?.id;
+                            const hasUnread =
+                              lastMsg &&
+                              myMembership?.last_seen_at &&
+                              new Date(myMembership.last_seen_at) <
+                                new Date(lastMsg.created_at) &&
+                              !isOwnMessage;
+
+                            return (
+                              <>
+                                <div className="flex justify-between items-baseline">
+                                  <h4
+                                    className={`text-sm truncate flex items-center gap-2 ${
+                                      hasUnread ? "font-bold" : "font-semibold"
+                                    }`}
+                                    style={{ color: "var(--text-primary)" }}
+                                  >
+                                    {room.chat_room_name || `Room ${room.id}`}
+                                    {hasUnread && (
+                                      <span
+                                        className="w-2 h-2 bg-red-500 rounded-full animate-pulse"
+                                        title="Unread messages"
+                                      ></span>
+                                    )}
+                                  </h4>
+                                  <span
+                                    className={`text-xs ${
+                                      hasUnread
+                                        ? "text-violet-500 font-semibold"
+                                        : ""
+                                    }`}
+                                    style={{
+                                      color: hasUnread
+                                        ? "var(--accent-color)"
+                                        : "var(--text-muted)",
+                                    }}
+                                  >
+                                    {time}
+                                  </span>
+                                </div>
+                                <p
+                                  className={`text-xs truncate ${
+                                    hasUnread ? "font-semibold" : ""
+                                  }`}
+                                  style={{
+                                    color: hasUnread
+                                      ? "var(--text-primary)"
+                                      : "var(--text-muted)",
+                                  }}
+                                >
+                                  {preview}
+                                </p>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
@@ -640,7 +672,6 @@ const ChatRoom = () => {
                   Members
                 </h4>
                 {/* ADD USER BUTTON */}
-                {currentUser?.id === selectedRoom?.created_by?.id && (
                   <button
                     className="text-xs font-bold px-2 py-1 rounded bg-violet-500/10 hover:bg-violet-500/20 transition-colors uppercase tracking-tight"
                     title="Add New Member"
@@ -649,7 +680,6 @@ const ChatRoom = () => {
                   >
                     + Add
                   </button>
-                )}
               </div>
 
               <div className="space-y-3">

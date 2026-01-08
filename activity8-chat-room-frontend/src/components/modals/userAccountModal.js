@@ -31,7 +31,8 @@ const UserAccountModal = ({ isOpen, onClose }) => {
     (formData.firstname === "" ||
       formData.firstname === currentUser?.firstname) &&
     (formData.lastname === "" || formData.lastname === currentUser?.lastname) &&
-    formData.password === "";
+    formData.password === "" &&
+    formData.password.length <= 8;
 
   const handleSave = async () => {
     // Use local variables to determine what to send

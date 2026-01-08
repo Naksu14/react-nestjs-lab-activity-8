@@ -98,3 +98,15 @@ export const updateChatRoom = async (chatRoomId, updateData) => {
   );
   return data;
 };
+
+export const updateLastReadMessage = async (chatRoomId) => {
+  const token = localStorage.getItem("authToken");
+  const { data } = await axios.patch(
+    `${API_URL}/chat-rooms/${chatRoomId}/last-seen`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return data;
+};

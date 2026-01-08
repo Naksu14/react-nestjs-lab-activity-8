@@ -197,4 +197,21 @@ export class ChatRoomsService {
     return this.findById(chatRoomId);
   }
 
+  async updateLastSeen(
+    chatRoomId: number,
+    userId: number,
+  ): Promise<void> {
+    const membership = await this.chatRoomMemberRepo.findOne({
+      where: {
+        chat_room: { id: chatRoomId } as any,
+        user: { id: userId } as any,
+      },
+    });
+    if (!membership) {
+      throw new NotFoundException('Membership not found');
+    }
+    membership.last_seen_at = new Date();
+    await this.chatRoomMemberRepo.save(membership);
+  }
+
 }

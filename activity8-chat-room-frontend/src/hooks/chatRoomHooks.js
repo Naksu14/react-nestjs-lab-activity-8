@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { joinRoom, leaveRoom } from "../socket/chatSocket";
 import { socket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import {
   getAllChatRooms,
   sendMessage,
   updateChatRoom,
+  updateLastReadMessage,
 } from "../services/chatRoomService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,9 @@ export const useChatRoom = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [selectedJoinRoomId, setSelectedJoinRoomId] = useState(null);
   const [messageText, setMessageText] = useState("");
+  const [isEditingRoom, setIsEditingRoom] = useState(false);
+  const [editRoomName, setEditRoomName] = useState("");
+  const [editRoomType, setEditRoomType] = useState("public");
   const [isUserActive, setIsUserActive] = useState(true);
   const queryClient = useQueryClient();
   const messagesContainerRef = useRef(null);
@@ -68,42 +72,24 @@ export const useChatRoom = () => {
 
   const {
     data: currentUser,
-    isLoading: userLoading,
-    isError: userError,
   } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => getCurrentUser(),
   });
-  if (userLoading) {
-  }
-  if (userError) {
-  }
 
   const {
     data: myChatRooms,
-    isLoading: roomsLoading,
-    isError: roomsError,
   } = useQuery({
     queryKey: ["myChatRooms"],
     queryFn: () => getMyChatRooms(),
   });
-  if (roomsLoading) {
-  }
-  if (roomsError) {
-  }
 
   const {
     data: allChatRooms,
-    isLoading: allRoomsLoading,
-    isError: allRoomsError,
   } = useQuery({
     queryKey: ["allChatRooms"],
     queryFn: () => getAllChatRooms(),
   });
-  if (allRoomsLoading) {
-  }
-  if (allRoomsError) {
-  }
 
   useEffect(() => {
     const INACTIVE_DELAY = 5000;
@@ -235,6 +221,34 @@ export const useChatRoom = () => {
 
   const selectedJoinRoom = findRoomById(allChatRooms, selectedJoinRoomId);
 
+  
+
+  useEffect(() => {
+    if (selectedRoom && !isEditingRoom) {
+      setEditRoomName(selectedRoom.chat_room_name || "");
+      setEditRoomType(selectedRoom.type || "public");
+    }
+  }, [selectedRoom, isEditingRoom]);
+
+  const handleSaveRoomDetails = async () => {
+    await handleUpdateRoomDetails({
+      chat_room_name: editRoomName,
+      type: editRoomType,
+    });
+    setIsEditingRoom(false);
+  };
+
+  const handleUpdateLastReadMessage = async (chatRoomId) => {
+    try {
+      const data = await updateLastReadMessage(chatRoomId);
+      console.log("Last read message updated:", data);
+      queryClient.invalidateQueries(["myChatRooms"]);
+      queryClient.invalidateQueries(["allChatRooms"]);
+    } catch (error) {
+      console.error("Failed to update last read message:", error);
+    }
+  };
+
   const handleLogout = () => {
     setIsModalOpen(false);
     localStorage.removeItem("authToken");
@@ -280,7 +294,14 @@ export const useChatRoom = () => {
     messageEndRef,
     selectedRoom,
     getRoomLastActivityDate,
-    handleUpdateRoomDetails,
+    isEditingRoom,
+    setIsEditingRoom,
+    editRoomName,
+    setEditRoomName,
+    editRoomType,
+    setEditRoomType,
+    handleSaveRoomDetails,
+    handleUpdateLastReadMessage,
     handleLogout,
   };
 };
