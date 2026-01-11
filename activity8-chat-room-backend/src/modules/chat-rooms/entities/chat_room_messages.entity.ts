@@ -24,6 +24,9 @@ export class ChatRoomMessage {
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   sender: User;
 
+  @Column('simple-json', { nullable: true })
+  unsent_user_id: string[];
+
   @Column('text')
   text_message: string;
 

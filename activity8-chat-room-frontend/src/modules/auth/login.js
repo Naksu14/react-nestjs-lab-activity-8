@@ -89,15 +89,6 @@ const Login = () => {
               {errorMessage}
             </div>
           ) : null}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <input type="checkbox" id="remember" className="mr-2" />
-              <label className="text-sm">Remember me</label>
-            </div>
-            <a href="#" className="text-sm text-blue-500 hover:underline">
-              Forgot password?
-            </a>
-          </div>
           <button
             className="w-full bg-violet-600 text-white py-2 rounded-md hover:bg-violet-700 transition duration-200"
             type="submit"

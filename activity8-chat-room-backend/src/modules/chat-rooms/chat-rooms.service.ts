@@ -176,6 +176,39 @@ export class ChatRoomsService {
     return savedMessage;
   }
 
+  async updateMessage(
+    messageId: number,
+    newText: string,
+  ): Promise<ChatRoomMessage | null> {
+    const message = await this.chatRoomMessageRepo.findOneBy({ id: messageId });
+    if (!message) throw new NotFoundException('Message not found');
+    message.text_message = newText;
+    await this.chatRoomMessageRepo.save(message);
+    return this.chatRoomMessageRepo.findOne({
+      where: { id: messageId },
+      relations: ['sender', 'chat_room'],
+    });
+  }
+
+  async addUnsentUserIdTounsent_user_id(
+    messageId: number,
+    userId: string,
+  ): Promise<ChatRoomMessage | null> {
+    const message = await this.chatRoomMessageRepo.findOneBy({ id: messageId });
+    if (!message) throw new NotFoundException('Message not found');
+    if (!message.unsent_user_id) {
+      message.unsent_user_id = [];
+    }
+    if (!message.unsent_user_id.includes(userId)) {
+      message.unsent_user_id.push(userId);
+      await this.chatRoomMessageRepo.save(message);
+    }
+    return this.chatRoomMessageRepo.findOne({
+      where: { id: messageId },
+      relations: ['sender', 'chat_room'],
+    });
+  }
+
   // Get messages of a chat room
   async getMessages(chatRoomId: number): Promise<ChatRoomMessage[]> {
     return this.chatRoomMessageRepo.find({

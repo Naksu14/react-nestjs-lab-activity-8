@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
   LogOut,
@@ -67,7 +67,23 @@ const ChatRoom = () => {
     handleSaveRoomDetails,
     handleUpdateLastReadMessage,
     handleLogout,
+    handleEditMessage,
+    handleUnsendMessage,
   } = useChatRoom();
+
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [menuOpenMessageId, setMenuOpenMessageId] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const messageInputRef = useRef(null);
+
+  // Auto-resize textarea as the user types long messages
+  useEffect(() => {
+    const el = messageInputRef.current;
+    if (!el) return;
+    // reset height to allow shrink
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [messageText]);
 
   return (
     <div
@@ -459,6 +475,9 @@ const ChatRoom = () => {
                 const senderFirst = msg?.sender?.firstname ?? "";
                 const senderLast = msg?.sender?.lastname ?? "";
                 const isOwn = senderId === (currentUser?.id ?? null);
+                const isUnsentForCurrentUser = (msg?.unsent_user_id || []).includes(
+                  currentUser?.id
+                );
                 const initials =
                   senderFirst || senderLast
                     ? `${(senderFirst || "")[0]}${
@@ -473,7 +492,13 @@ const ChatRoom = () => {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3 max-w-[80%] ${
+                    onMouseEnter={() => setHoveredMessageId(msg.id)}
+                    onMouseLeave={() => {
+                      setHoveredMessageId((cur) => (cur === msg.id ? null : cur));
+                      // close menu when leaving
+                      setMenuOpenMessageId((cur) => (cur === msg.id ? null : cur));
+                    }}
+                    className={`relative flex gap-3 max-w-[80%] ${
                       isOwn ? "ml-auto flex-row-reverse" : ""
                     }`}
                   >
@@ -503,9 +528,54 @@ const ChatRoom = () => {
                         {senderFirst} {senderLast} · {time}
                       </div>
                       <div className={`${isOwn ? "text-right" : " text-left"}`}>
-                        {msg.text_message}
+                        {isUnsentForCurrentUser ? (
+                          <span className="italic">Message unsent</span>
+                        ) : (
+                          msg.text_message
+                        )}
                       </div>
                     </div>
+
+                    {/* Hover menu for own messages */}
+                    {isOwn && !isUnsentForCurrentUser && (
+                      <div className={` top-0 left-0 ${isOwn ? ("-right-8") : "-left-8"}`}>
+                        <button
+                          className={`opacity-0 hover:opacity-100 transition-opacity ${
+                            hoveredMessageId === msg.id ? "opacity-100" : ""
+                          } p-1.5 rounded-full bg-[rgba(0,0,0,0.25)] text-white`}
+                          onClick={() => setMenuOpenMessageId((cur) => (cur === msg.id ? null : msg.id))}
+                          title="Message options"
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+
+                        {menuOpenMessageId === msg.id && (
+                          <div className="mt-2 w-40 rounded bg-white shadow-md text-sm" style={{backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)'}}>
+                            <button
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                              onClick={() => {
+                                setEditingMessageId(msg.id);
+                                setMessageText(msg.text_message || "");
+                                setMenuOpenMessageId(null);
+                                // focus input after next tick
+                                setTimeout(() => messageInputRef.current?.focus?.(), 20);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-100"
+                              onClick={async () => {
+                                setMenuOpenMessageId(null);
+                                await handleUnsendMessage(selectedRoomId, msg.id);
+                              }}
+                            >
+                              Unsend
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -522,31 +592,65 @@ const ChatRoom = () => {
             }}
           >
             <div
-              className="flex items-center gap-2 border rounded-lg px-3 py-1 transition-all"
+              className="relative flex items-center gap-2 border rounded-lg px-3 py-1 transition-all"
               style={{
                 backgroundColor: "var(--bg-main)",
                 borderColor: "var(--border-color)",
               }}
             >
-              <input
-                type="text"
-                placeholder="Type a message..."
+              <textarea
+                placeholder="Type a message... (Shift+Enter for newline)"
+                ref={messageInputRef}
+                rows={1}
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 px-2 outline-none"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-8 px-2 pr-14 outline-none resize-none overflow-hidden"
                 style={{ color: "var(--text-primary)" }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSendMessage();
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (editingMessageId) {
+                      handleEditMessage(selectedRoomId, editingMessageId, messageText);
+                      setEditingMessageId(null);
+                      setMessageText("");
+                    } else {
+                      handleSendMessage();
+                    }
+                  }
                 }}
               />
-              <button
+              <div className="absolute right-3 bottom-3 flex items-center">
+                <button
                 className="p-1.5 rounded-md text-white transition-colors"
                 title="Send Message"
                 style={{ backgroundColor: "var(--accent-color)" }}
-                onClick={handleSendMessage}
+                onClick={() => {
+                  if (editingMessageId) {
+                    handleEditMessage(selectedRoomId, editingMessageId, messageText);
+                    setEditingMessageId(null);
+                    setMessageText("");
+                  } else {
+                    handleSendMessage();
+                  }
+                }}
               >
                 <Send size={16} />
               </button>
+              {editingMessageId && (
+                <button
+                  className="ml-2 px-3 py-1 rounded-md border text-sm text-[var(--text-muted)] hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    setEditingMessageId(null);
+                    setMessageText("");
+                    // restore focus for quick typing
+                    setTimeout(() => messageInputRef.current?.focus?.(), 20);
+                  }}
+                  title="Cancel edit"
+                >
+                  Cancel
+                </button>
+              )}
+              </div>
             </div>
           </div>
         </section>

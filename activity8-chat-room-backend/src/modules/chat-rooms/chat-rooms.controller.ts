@@ -16,7 +16,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ChatRoomsService } from './chat-rooms.service';
 import { CreateChatRoomDto } from './dto/chat_rooms.dto';
 import { AddMemberToChatRoomDto } from './dto/chat_members.dto';
-import { SendMessageDto } from './dto/chat_messages.dto';
+import { SendMessageDto, UpdateMessageDto } from './dto/chat_messages.dto';
 
 @ApiTags('Chat Rooms')
 @Controller('chat-rooms')
@@ -97,6 +97,33 @@ export class ChatRoomsController {
     const user = req.user;
     const userId = user?.id;
     return this.chatRoomsService.sendMessage(dto, userId);
+  }
+
+  //update Chat message
+  @ApiOperation({ summary: 'Update chat message' })
+  @ApiResponse({ status: 200, description: 'Chat message updated successfully' })
+  @Patch('messages/:id')
+  @UseGuards(AuthGuard('jwt'))
+  async updateMessage(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDto: UpdateMessageDto,
+  ) {
+    // Service expects (messageId, newText)
+    return this.chatRoomsService.updateMessage(id, updateDto.text_message);
+  }
+
+  // add id to unsent_user_id array
+  @ApiOperation({ summary: 'Mark message as unsent for a user' })
+  @ApiResponse({ status: 200, description: 'Message marked as unsent' })
+  @Patch('messages/:id/unsent')
+  @UseGuards(AuthGuard('jwt'))
+  async markMessageAsUnsent(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    const user = req.user;
+    const userId = user?.id;
+    return this.chatRoomsService.addUnsentUserIdTounsent_user_id(id, userId);
   }
 
   //update chat room details

@@ -12,3 +12,10 @@ export class SendMessageDto {
   @IsNotEmpty()
   text_message: string;
 }
+
+export class UpdateMessageDto {
+  @ApiProperty({ example: 'Edited message text' })
+  @IsString()
+  @IsNotEmpty()
+  text_message: string;
+}

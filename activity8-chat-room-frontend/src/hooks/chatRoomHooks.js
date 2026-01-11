@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { joinRoom, leaveRoom } from "../socket/chatSocket";
 import { socket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ import {
   sendMessage,
   updateChatRoom,
   updateLastReadMessage,
+  updateMessage,
+  markMessageAsUnsent
 } from "../services/chatRoomService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
@@ -240,8 +242,7 @@ export const useChatRoom = () => {
 
   const handleUpdateLastReadMessage = async (chatRoomId) => {
     try {
-      const data = await updateLastReadMessage(chatRoomId);
-      console.log("Last read message updated:", data);
+      await updateLastReadMessage(chatRoomId);
       queryClient.invalidateQueries(["myChatRooms"]);
       queryClient.invalidateQueries(["allChatRooms"]);
     } catch (error) {
@@ -253,6 +254,78 @@ export const useChatRoom = () => {
     setIsModalOpen(false);
     localStorage.removeItem("authToken");
     navigate("/login");
+  };
+
+  // Edit a message locally (optimistic). Updates react-query cache for immediate UI feedback.
+  const handleEditMessage = async (chatRoomId, messageId, newText) => {
+    try {
+      // update myChatRooms cache
+      await updateMessage(messageId, { text_message: newText });
+
+      queryClient.setQueryData(["myChatRooms"], (old) => {
+        if (!old) return old;
+        return old.map((room) => {
+          if (room.id !== chatRoomId) return room;
+          const messages = (room.messages || []).map((m) =>
+            m.id === messageId ? { ...m, text_message: newText, edited: true } : m
+          );
+          return { ...room, messages };
+        });
+      });
+
+      // update allChatRooms cache as well if present
+      queryClient.setQueryData(["allChatRooms"], (old) => {
+        if (!old) return old;
+        return old.map((room) => {
+          if (room.id !== chatRoomId) return room;
+          const messages = (room.messages || []).map((m) =>
+            m.id === messageId ? { ...m, text_message: newText, edited: true } : m
+          );
+          return { ...room, messages };
+        });
+      });
+
+      // NOTE: backend API for updating messages is not implemented in this project.
+      // If available, you should call it here and revalidate queries.
+    } catch (error) {
+      console.error("Failed to edit message (local):", error);
+    }
+  };
+
+  // Unsend (remove) a message locally (optimistic)
+  const handleUnsendMessage = async (chatRoomId, messageId) => {
+    try {
+
+      const data = await markMessageAsUnsent(messageId);
+      console.log("Unsend response data:", data);
+      
+      queryClient.setQueryData(["myChatRooms"], (old) => {
+        if (!old) return old;
+        return old.map((room) => {
+          if (room.id !== chatRoomId) return room;
+          const messages = (room.messages || []).filter((m) => m.id !== messageId);
+          return { ...room, messages };
+        });
+      });
+
+      queryClient.setQueryData(["allChatRooms"], (old) => {
+        if (!old) return old;
+        return old.map((room) => {
+          if (room.id !== chatRoomId) return room;
+          const messages = (room.messages || []).filter((m) => m.id !== messageId);
+          return { ...room, messages };
+        });
+      });
+
+      // backend call performed above; ensure client state matches server
+      queryClient.invalidateQueries(["myChatRooms"]);
+      queryClient.invalidateQueries(["allChatRooms"]);
+    } catch (error) {
+      console.error("Failed to unsend message:", error);
+      // revert optimistic change by re-fetching server state
+      queryClient.invalidateQueries(["myChatRooms"]);
+      queryClient.invalidateQueries(["allChatRooms"]);
+    }
   };
 
   return {
@@ -303,5 +376,7 @@ export const useChatRoom = () => {
     handleSaveRoomDetails,
     handleUpdateLastReadMessage,
     handleLogout,
+    handleEditMessage,
+    handleUnsendMessage,
   };
 };

@@ -85,6 +85,30 @@ export const sendMessage = async (payload) => {
   return data;
 };
 
+// update message 
+export const updateMessage = async (messageId, updateData) => {
+  const token = localStorage.getItem("authToken");
+  const { data } = await axios.patch(
+    `${API_URL}/chat-rooms/messages/${messageId}`,
+    updateData,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return data;
+};
+
+export const markMessageAsUnsent = async (messageId) => {
+  const token = localStorage.getItem("authToken");
+  const { data } = await axios.patch(
+    `${API_URL}/chat-rooms/messages/${messageId}/unsent`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return data;
+};
 
 // update chat room details
 export const updateChatRoom = async (chatRoomId, updateData) => {
